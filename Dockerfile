@@ -1,9 +1,13 @@
 # To build and run this Dockerfile:
 # docker build -t myimage .
-# docker run -p 8000:8000 myimage
+# docker run -p 8888:8888 myimage
 
 # This Docker has been tested on x86 and ARM.
 # Originally adapted from: https://github.com/jupyter/docker-stacks/blob/master/datascience-notebook/Dockerfile
+
+# Depends on:
+# https://github.com/jupyter/docker-stacks/blob/master/base-notebook/Dockerfile
+# https://github.com/jupyter/docker-stacks/blob/master/minimal-notebook/Dockerfile
 
 FROM "jupyter/minimal-notebook"
 
@@ -54,12 +58,13 @@ RUN julia -e 'import Pkg; Pkg.add("IJulia"); using IJulia'
 
 WORKDIR "${HOME}"
 
-#RUN git clone https://github.com/Libbum/DICE.jl-notebooks.git
+COPY Manifest.toml Project.toml ./
 
-# Patched with updated dependencies:
-RUN git clone https://github.com/possibleplanets/DICE.jl-notebooks.git 
+RUN julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate(); Pkg.precompile();'
 
-RUN cd DICE.jl-notebooks && \
-    julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate(); Pkg.precompile();'
+RUN rmdir work
+COPY 2013 2013
+COPY 2016 2016
+COPY GAMS GAMS
 
 ENV DOCKER_STACKS_JUPYTER_CMD=lab
